@@ -110,9 +110,19 @@ lemma epsilonInjectiveMonotone [MetricSpace X] [MetricSpace Y] (f : X → Y) (ε
   exact hf.1
   linarith
 
-lemma diameterIsAttained [MetricSpace X] [CompactSpace X] : ∃ (w z : X), dist w z = Metric.diam (Set.univ : Set X) := by
-  have := IsCompact.exists_isMaxOn isCompact_univ (Set.univ : Set X)
-  sorry
+lemma diameterIsAttained [MetricSpace X] (S : Set X) (hS : IsCompact S) (ne_S : S.Nonempty) : ∃ w ∈ S, ∃ z ∈  S, dist w z = Metric.diam (S) := by
+  have := IsCompact.prod hS hS
+  rcases this.exists_isMaxOn (ne_S.prod ne_S) continuous_dist.continuousOn with ⟨x, hx, hhx⟩
+  use x.1, hx.1, x.2, hx.2
+  rw [isMaxOn_iff] at hhx
+  have : ∀ x1 ∈ S, ∀ x2 ∈ S, dist x1 x2 ≤ dist x.1 x.2 := by
+    intro x1 hx1 x2 hx2
+    specialize hhx ⟨x1, x2⟩ ⟨hx1, hx2⟩
+    exact hhx
+  have ineq1 := Metric.diam_le_of_forall_dist_le_of_nonempty ne_S this
+  have ineq2 := Metric.dist_le_diam_of_mem hS.isBounded hx.1 hx.2
+  linarith
+
 
 lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε : ℝ) (hε : ε > 0) : IsOpen (spaceOfEpsilonInjective X Y ε) := by
   rw [Metric.isOpen_iff]
@@ -128,8 +138,8 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
   intro y
   constructor
   exact Metric.isBounded_of_compactSpace
-  have : ∀ (a b :  g ⁻¹' {y}), dist a b < ε := by
-    intro a b
+  have : ∀ a ∈  g ⁻¹' {y}, ∀ b ∈ g ⁻¹' {y}, dist a b < ε := by
+    intro a ha b hb
     apply hδ a b
     calc
       dist (f a) (f b) ≤ dist (f a) (g a) + dist (g a) (f b) := dist_triangle (f a) (g a) (f b)
@@ -144,11 +154,11 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
         have ha : g a = y := by
           rw [← Set.mem_singleton_iff]
           rw [← Set.mem_preimage]
-          exact a.2
+          exact ha
         have hb : g b = y := by
           rw [← Set.mem_singleton_iff]
           rw [← Set.mem_preimage]
-          exact b.2
+          exact hb
         rw [ha, hb]
       _ < δ := by
         have dfgest : ∀ (x : X), dist (f x) (g x) < δ / 2 := by
@@ -167,28 +177,15 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
     apply IsClosed.isCompact
     apply IsClosed.preimage g.2
     apply isClosed_singleton
-  have tmp : ∃ (w z : g ⁻¹' {y}), dist w z = Metric.diam (g ⁻¹' {y}) := by
-    sorry
-  rcases tmp with ⟨w, z, hwz⟩
-  specialize this w z
+  -- rw [isCompact_iff_compactSpace] at cpt_fibs
+  obtain (h | h) := isEmpty_or_nonempty (g ⁻¹' {y})
+  have : Metric.diam (g ⁻¹' {y}) = 0 := by
+    rw [Set.isEmpty_coe_sort.mp h]
+    simp
+  linarith
+  rw [Set.nonempty_coe_sort] at h
+  have tmp : ∃ w ∈ g ⁻¹' {y}, ∃ z ∈ g ⁻¹' {y}, dist w z = Metric.diam (g ⁻¹' {y}) := diameterIsAttained X (g ⁻¹' {y}) cpt_fibs h
+  rcases tmp with ⟨w, hw, z, hz, hwz⟩
+  specialize this w hw z hz
   rw [← hwz]
   exact this
-
-
-
-
-
-
-
-
-
---
-
-
-
-
-  -- ∃ (a1 : ℕ → X) (a2 : ℕ → X), ∀ n , dist (f (a1 n)) (f (a2 n)) < 1/n ∧ dist (a1 n) (a2 n) < ε := by
-
-
-
-sorry
