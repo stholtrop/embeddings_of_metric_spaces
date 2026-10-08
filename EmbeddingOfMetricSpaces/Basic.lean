@@ -110,6 +110,10 @@ lemma epsilonInjectiveMonotone [MetricSpace X] [MetricSpace Y] (f : X → Y) (ε
   exact hf.1
   linarith
 
+lemma diameterIsAttained [MetricSpace X] [CompactSpace X] : ∃ (w z : X), dist w z = Metric.diam (Set.univ : Set X) := by
+  have := IsCompact.exists_isMaxOn isCompact_univ (Set.univ : Set X)
+  sorry
+
 lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε : ℝ) (hε : ε > 0) : IsOpen (spaceOfEpsilonInjective X Y ε) := by
   rw [Metric.isOpen_iff]
   intro f hf
@@ -124,9 +128,52 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
   intro y
   constructor
   exact Metric.isBounded_of_compactSpace
-  --apply Metric.diam_le_of_forall_dist_lt
+  have : ∀ (a b :  g ⁻¹' {y}), dist a b < ε := by
+    intro a b
+    apply hδ a b
+    calc
+      dist (f a) (f b) ≤ dist (f a) (g a) + dist (g a) (f b) := dist_triangle (f a) (g a) (f b)
+      _ ≤ dist (f a) (g a) + (dist (g a) (g b) + dist (g b) (f b)) := by
+        gcongr
+        exact dist_triangle (g a) (g b) (f b)
+      _ = dist (f a) (g a) + dist (g b) (f b) := by
+        rw [add_left_cancel_iff]
+        conv_rhs => rw [← zero_add (dist (g b) (f b))]
+        rw [add_right_cancel_iff]
+        rw [dist_eq_zero]
+        have ha : g a = y := by
+          rw [← Set.mem_singleton_iff]
+          rw [← Set.mem_preimage]
+          exact a.2
+        have hb : g b = y := by
+          rw [← Set.mem_singleton_iff]
+          rw [← Set.mem_preimage]
+          exact b.2
+        rw [ha, hb]
+      _ < δ := by
+        have dfgest : ∀ (x : X), dist (f x) (g x) < δ / 2 := by
+          have : δ / 2 > 0 := by linarith
+          rw [← ContinuousMap.dist_lt_iff this]
+          rw [← Metric.mem_ball']
+          exact hg
+        suffices h : dist (f a) (g a) < δ / 2 ∧ dist (g b) (f b )< δ / 2  by
+          obtain ⟨hha, hhb⟩ := h
+          linarith
+        constructor
+        exact dfgest a
+        rw [dist_comm]
+        exact dfgest b
+  have cpt_fibs : IsCompact (g ⁻¹' {y}) := by
+    apply IsClosed.isCompact
+    apply IsClosed.preimage g.2
+    apply isClosed_singleton
+  have tmp : ∃ (w z : g ⁻¹' {y}), dist w z = Metric.diam (g ⁻¹' {y}) := by
+    sorry
+  rcases tmp with ⟨w, z, hwz⟩
+  specialize this w z
+  rw [← hwz]
+  exact this
 
-  sorry
 
 
 
