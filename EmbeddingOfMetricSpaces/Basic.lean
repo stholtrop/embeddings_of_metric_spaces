@@ -14,8 +14,6 @@ def epsilonInjective [MetricSpace X] [MetricSpace Y] (f : X → Y) (ε : ℝ) : 
 
 /-
 TODO:
-- Define space of epsilon embeddings as a subspace of continuous functions with uniform topology.
-- Show the space of epsilon embeddings is open
 - Show the space of epsilon embeddings is dense under the right assumptions
 - Define general position
 -/
@@ -189,3 +187,22 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
   specialize this w hw z hz
   rw [← hwz]
   exact this
+
+lemma (a : ℝ) ()
+
+lemma epsilonInjective_to_injective [MetricSpace X] [MetricSpace Y] (f : X → Y) (hf : ∀ ε > 0, epsilonInjective f ε) : f.Injective := by
+  intro a b hhf
+  rw [← zero_eq_dist]
+
+  have : ∀ ε > 0 , dist a b < 0 + ε := by
+    intro ε hε
+    have ⟨hbound, bound⟩ := hf ε hε (f a)
+    have ha : a ∈ f ⁻¹' {f a} := by simp
+    have hb : b ∈ f ⁻¹' {f a} := by
+      rw [hhf]
+      simp
+    have := Metric.dist_le_diam_of_mem hbound ha hb
+    linarith
+  have ineq1 := le_of_forall_pos_lt_add this
+  have ineq2 := dist_nonneg (x := a) (y := b)
+  linarith
