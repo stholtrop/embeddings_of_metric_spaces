@@ -188,8 +188,6 @@ lemma epsilonInjectiveOpen [MetricSpace X] [CompactSpace X] [MetricSpace Y] (ε 
   rw [← hwz]
   exact this
 
-lemma (a : ℝ) ()
-
 lemma epsilonInjective_to_injective [MetricSpace X] [MetricSpace Y] (f : X → Y) (hf : ∀ ε > 0, epsilonInjective f ε) : f.Injective := by
   intro a b hhf
   rw [← zero_eq_dist]
@@ -203,6 +201,5 @@ lemma epsilonInjective_to_injective [MetricSpace X] [MetricSpace Y] (f : X → Y
       simp
     have := Metric.dist_le_diam_of_mem hbound ha hb
     linarith
-  have ineq1 := le_of_forall_pos_lt_add this
-  have ineq2 := dist_nonneg (x := a) (y := b)
-  linarith
+
+  exact le_antisymm (dist_nonneg (x := a) (y := b)) (le_of_forall_pos_lt_add this)
